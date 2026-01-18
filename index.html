@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video</title>
+<style>
+  body { margin:0; background:#000; }
+  #wrap { position:fixed; inset:0; background:#000; }
+  video { width:100%; height:100%; object-fit:cover; }
+
+  #playIcon{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    z-index:5; pointer-events:none;
+  }
+  #playIcon span{
+    width:90px; height:90px; border-radius:50%;
+    background:rgba(255,255,255,.85);
+    display:flex; align-items:center; justify-content:center;
+    font-size:36px; color:#000;
+  }
+
+  #tapLayer{
+    position:absolute; inset:0;
+    z-index:10; background:rgba(0,0,0,0.01);
+  }
+
+  #bar{
+    position:absolute; left:0; right:0; bottom:0;
+    padding:10px;
+    background:linear-gradient(to top, rgba(0,0,0,.7), transparent);
+    color:#fff; font-size:12px; z-index:30;
+  }
+
+  #row{ display:flex; justify-content:space-between; align-items:center; }
+  #progress{ height:4px; background:rgba(255,255,255,.3); margin-top:6px; }
+  #fill{ width:0%; height:100%; background:#fff; }
+  #fs{ font-size:16px; padding:4px 6px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div id="wrap">
+  <video id="vid" src="https://cdn-videyco78-byte.github.io/Langsung/" playsinline muted></video>
+
+  <div id="playIcon"><span>▶</span></div>
+
+  <div id="bar">
+    <div id="row">
+      <div id="time">0:00 / 0:00</div>
+      <div id="fs">⛶</div>
+    </div>
+    <div id="progress"><div id="fill"></div></div>
+  </div>
+
+  <div id="tapLayer"></div>
+</div>
+
+<script>
+const ads = "https://otieu.com/4/10426288";
+const vid = document.getElementById("vid");
+const layer = document.getElementById("tapLayer");
+const icon = document.getElementById("playIcon");
+const timeEl = document.getElementById("time");
+const fill = document.getElementById("fill");
+const bar = document.getElementById("progress");
+const fs = document.getElementById("fs");
+
+let first = true;
+let lastAd = 0;
+
+function openAd(){
+  const now = Date.now();
+  if(now - lastAd > 1500){
+    lastAd = now;
+    window.open(ads, "_blank");
+  }
+}
+
+function fmt(t){
+  const m = Math.floor(t/60);
+  const s = Math.floor(t%60).toString().padStart(2,"00");
+  return m+":"+s;
+}
+
+layer.onclick = function(){
+  openAd();
+  if(first){
+    first = false;
+    icon.style.display = "none";
+    vid.muted = false;
+    vid.play();
+  }
+};
+
+vid.addEventListener("play", () => {
+  openAd();
+  if(first){
+    first = false;
+    icon.style.display = "none";
+    vid.muted = false;
+  }
+});
+
+vid.addEventListener("pause", ()=> openAd());
+
+vid.addEventListener("timeupdate", ()=>{
+  if(!isNaN(vid.duration)){
+    const p = (vid.currentTime / vid.duration) * 100;
+    fill.style.width = p + "%";
+    timeEl.textContent = fmt(vid.currentTime) + " / " + fmt(vid.duration);
+  }
+});
+
+bar.onclick = function(e){
+  e.stopPropagation();
+  const rect = bar.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const pct = x / rect.width;
+  vid.currentTime = pct * vid.duration;
+  openAd();
+};
+
+fs.onclick = function(e){
+  e.stopPropagation();
+  if (vid.requestFullscreen) vid.requestFullscreen();
+  else if (vid.webkitRequestFullscreen) vid.webkitRequestFullscreen();
+};
+</script>
+
+</body>
+</html>
